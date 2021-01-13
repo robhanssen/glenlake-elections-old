@@ -10,16 +10,17 @@ SCALING = YMAX_DEFAULT / QUORUM
 YLABELS = seq(0,500,30)
 XLIMITS = c(as.Date("2021-01-11"),as.Date("2021-02-10"))
 PERCENTBREAKS = seq(0,4*QUORUM,25)
+YEAR = 2021
 
 # read data file
-votes <- read_csv("vote-tracking.csv") %>% 
+votes <- read_csv("vote-tracking-2021.csv") %>% 
                     mutate(date = as.Date(date, format="%Y-%m-%d"),
                            percentcompleted = votesreceived / QUORUM)
 
 # caption generator
 lastgen = format(today(), format="%b %d, %Y")
 lastupdate = format(max(votes$date), format="%b %d, %Y")
-capt = paste0("\U00A9 2021, Glenlake Homeowners Association\nLast updated ", lastgen, "\nLast data entry: ", lastupdate)
+capt = paste0("\U00A9 ", YEAR,", Glenlake Homeowners Association\nLast updated ", lastgen, "\nLast data entry: ", lastupdate)
 
 # y-axis max
 votesmax = max(votes$votesreceived)
@@ -33,8 +34,8 @@ YLIMITS = c(0 , ymax)
 
 
 votes %>% ggplot + aes(x=date, y=votesreceived) + 
-            geom_point() + 
             geom_smooth(method="lm", lty=2, color="gray") + 
+            geom_point() + 
             scale_x_date(date_breaks="1 week", date_labels = "%b %d", limit=XLIMITS) + 
             scale_y_continuous(limit = YLIMITS, breaks = YLABELS, 
                                sec.axis = sec_axis(~ ./QUORUM*100, breaks=PERCENTBREAKS, name="Quorum (%)")
