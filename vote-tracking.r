@@ -22,7 +22,7 @@ votes <- read_csv("vote-tracking-2021.csv") %>%
 # caption generator
 lastgen = format(today(), format="%b %d, %Y")
 lastupdate = format(max(votes$date), format="%b %d, %Y")
-capt = paste0("\U00A9 ", YEAR,", Glenlake Homeowners Association\nLast updated ", lastgen, "\nLast data entry: ", lastupdate)
+capt = paste0("\U00A9 ", YEAR,", Glenlake Homeowners Association\nLast updated: ", lastgen, "\nLast data entry: ", lastupdate)
 
 # y-axis max
 votesmax = max(votes$votesreceived)
