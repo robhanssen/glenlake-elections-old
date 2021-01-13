@@ -53,3 +53,4 @@ votes %>% ggplot + aes(x=date, y=votesreceived, label=votesreceived) +
             theme(legend.position = "none")
 
 ggsave("graphs/vote-tracking.png")
+ggsave("graphs/vote-tracking.pdf")
