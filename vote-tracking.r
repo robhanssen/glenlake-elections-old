@@ -52,5 +52,5 @@ votes %>% ggplot + aes(x=date, y=votesreceived, label=votesreceived) +
             theme_light() + 
             theme(legend.position = "none")
 
-ggsave("graphs/vote-tracking.png")
+ggsave("graphs/vote-tracking-2021.png")
 ggsave("graphs/vote-tracking.pdf")
