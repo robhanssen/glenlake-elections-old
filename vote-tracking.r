@@ -48,7 +48,7 @@ votes %>% ggplot + aes(x=date, y=votesreceived, label=votesreceived) +
             geom_vline(xintercept = MEETINGDATE, lty = 2, color = "red") + 
             geom_label_repel(aes(date,votesreceived, label=votesreceived, fill=pastquorum), color="white") +             
             annotate("text",x = as.Date("2021-01-13", format="%Y-%m-%d"), y = 125, label = paste0("Quorum: ", QUORUM)) + 
-            annotate("text",x = as.Date("2021-02-05", format="%Y-%m-%d"), y = 60, label = "Annual Meeting date", angle = 90) + 
+            annotate("text",x = as.Date("2021-02-05", format="%Y-%m-%d"), y = 60, label = "Annual Meeting", angle = 90) + 
             theme_light() + 
             theme(legend.position = "none")
 
