@@ -2,6 +2,7 @@
 library(tidyverse)
 library(lubridate)
 library(ggrepel)
+options(bitmapType='cairo')
 
 #define constants
 MEETINGDATE = as.Date("2021-02-06", format="%Y-%m-%d")
