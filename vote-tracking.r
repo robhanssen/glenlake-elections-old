@@ -15,7 +15,7 @@ ymax = ifelse(max(votes$votesreceived)<120, 160, ((max(votes$votesreceived)*1.33
 votes %>% ggplot + aes(x=date, y=votesreceived) + 
             geom_point() + 
             geom_smooth(method="lm", lty=2, color="gray") + 
-            scale_x_date(date_breaks="1 week", date_labels = "%b %d", limit=c(as.Date("2021-01-11"),as.Date("2021-02-13"))) + 
+            scale_x_date(date_breaks="1 week", date_labels = "%b %d", limit=c(as.Date("2021-01-11"),as.Date("2021-02-10"))) + 
             scale_y_continuous(limit=c(0,ymax), breaks=seq(0,500,30)) + 
             labs(x="Date", y="Votes received", caption=capt)  +
             ggtitle("Votes received for the 2021 Glen Lake Board of Directors election") +
