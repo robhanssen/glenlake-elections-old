@@ -9,10 +9,12 @@ YMAX_DEFAULT = 160
 SCALING = YMAX_DEFAULT / QUORUM
 YLABELS = seq(0,500,30)
 XLIMITS = c(as.Date("2021-01-11"),as.Date("2021-02-10"))
-
+PERCENTBREAKS = seq(0,4*QUORUM,25)
 
 # read data file
-votes <- read_csv("vote-tracking.csv") %>% mutate(date = as.Date(date, format="%Y-%m-%d"))
+votes <- read_csv("vote-tracking.csv") %>% 
+                    mutate(date = as.Date(date, format="%Y-%m-%d"),
+                           percentcompleted = votesreceived / QUORUM)
 
 # caption generator
 lastgen = format(today(), format="%b %d, %Y")
@@ -35,10 +37,10 @@ votes %>% ggplot + aes(x=date, y=votesreceived) +
             geom_smooth(method="lm", lty=2, color="gray") + 
             scale_x_date(date_breaks="1 week", date_labels = "%b %d", limit=XLIMITS) + 
             scale_y_continuous(limit = YLIMITS, breaks = YLABELS, 
-                               sec.axis = sec_axis(~ ./QUORUM*100, breaks=seq(0,100,25), name="Percentage of quorum")
+                               sec.axis = sec_axis(~ ./QUORUM*100, breaks=PERCENTBREAKS, name="Quorum (%)")
                                 ) + 
             labs(x="Date", y="Votes received", caption=capt)  +
-            ggtitle("Votes received for the 2021 Glen Lake Board of Directors election") +
+            #ggtitle("Votes received for the 2021 Glen Lake Board of Directors election") +
             theme_light() + 
             geom_hline(yintercept = QUORUM, lty=2, color="red") + 
             geom_vline(xintercept = MEETINGDATE, lty = 2, color = "red") + 
