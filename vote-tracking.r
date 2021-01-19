@@ -10,7 +10,7 @@ QUORUM = 120
 YMAX_DEFAULT = 160
 SCALING = YMAX_DEFAULT / QUORUM
 YLABELS = seq(0,500,30)
-XLIMITS = c(as.Date("2021-01-06"),as.Date("2021-02-10"))
+XLIMITS = c(MEETINGDATE - months(1),MEETINGDATE + days(3))
 PERCENTBREAKS = seq(0,4*QUORUM,25)
 YEAR = 2021
 
@@ -47,11 +47,10 @@ votes %>% ggplot + aes(x=date, y=votesreceived, label=votesreceived) +
             labs(x="Date", y="Votes received", caption=capt)  +
             geom_hline(yintercept = QUORUM, lty=2, color="red") + 
             geom_vline(xintercept = MEETINGDATE, lty = 2, color = "red") + 
-            geom_label_repel(aes(date,votesreceived, label=votesreceived, fill=pastquorum), color="white") +             
-            annotate("text",x = as.Date("2021-01-13", format="%Y-%m-%d"), y = 125, label = paste0("Quorum: ", QUORUM)) + 
-            annotate("text",x = as.Date("2021-02-05", format="%Y-%m-%d"), y = 60, label = "Annual Meeting", angle = 90) + 
-            theme_light() + 
-            theme(legend.position = "none")
+            geom_label_repel(aes(date, votesreceived, label = votesreceived, fill = pastquorum), color="white") +             
+            annotate("text", x = MEETINGDATE - days(28), y = QUORUM*1.05, label = paste0("Quorum: ", QUORUM)) + 
+            annotate("text", x = MEETINGDATE - days(1), y = QUORUM %/% 2, label = "Annual Meeting", angle = 90) + 
+            theme_light() + theme(legend.position = "none")
 
 ggsave("graphs/vote-tracking-2021.png")
 ggsave("graphs/vote-tracking-2021.pdf")
