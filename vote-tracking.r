@@ -6,10 +6,11 @@ options(bitmapType='cairo')
 
 #define constants
 MEETINGDATE = as.Date("2021-02-06", format="%Y-%m-%d")
-QUORUM = 120
+NUMBEROFHOMES = 482
+QUORUM = NUMBEROFHOMES %/% 4  # 25% quorum requirement
 YMAX_DEFAULT = 160
 SCALING = YMAX_DEFAULT / QUORUM
-YLABELS = seq(0,500,30)
+YLABELS = seq(0,NUMBEROFHOMES,30)
 XLIMITS = c(MEETINGDATE - months(1),MEETINGDATE + days(3))
 PERCENTBREAKS = seq(0,4*QUORUM,25)
 YEAR = 2021
