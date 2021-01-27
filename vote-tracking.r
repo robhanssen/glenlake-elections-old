@@ -18,7 +18,9 @@ YEAR = 2021
 # read data file
 votes <- read_csv("sources/vote-tracking-2021.csv") %>% 
                     mutate(date = as.Date(date, format="%Y-%m-%d"),
-                           pastquorum = ifelse(votesreceived < QUORUM, FALSE, TRUE)
+                           pastquorum = ifelse(votesreceived < QUORUM, FALSE, TRUE),
+                           daysuntilelection = MEETINGDATE - date,
+                           votesneeded = QUORUM - votesreceived
                             )
 
 # caption generator
@@ -55,3 +57,15 @@ votes %>% ggplot + aes(x=date, y=votesreceived, label=votesreceived) +
 
 ggsave("graphs/vote-tracking-2021.png")
 ggsave("graphs/vote-tracking-2021.pdf")
+
+votes %>% ggplot + aes(x=daysuntilelection, y=votesneeded) + 
+              geom_point(size=3) + 
+              geom_smooth(method="lm", fullrange=TRUE, se=FALSE, lty=2, color="dark green") + 
+              scale_x_reverse(limits=c(max(votes$daysuntilelection),-3))  +
+              scale_y_continuous(limits=c(-3,max(votes$votesneeded))) + 
+              labs(x="Time until election (in days)", y="Votes still needed") +
+              geom_hline(yintercept=0, lty=1, color="red")  +
+              geom_vline(xintercept=0, lty=1, color="red")  +
+              theme_light()
+              
+ggsave("graphs/vote-expectation-2021.pdf")
