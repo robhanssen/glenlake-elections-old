@@ -58,14 +58,20 @@ votes %>% ggplot + aes(x=date, y=votesreceived, label=votesreceived) +
 ggsave("graphs/vote-tracking-2021.png")
 ggsave("graphs/vote-tracking-2021.pdf")
 
+model <- lm(votes$votesreceived ~ votes$daysuntilelection)
+slope = round(abs(coefficients(model)[2]),1)
+intercept = round(coefficients(model)[1],0)
+modelcomment = paste0("Rate: ", slope, " votes/day\nExpected target: ",intercept, " votes")
+
 votes %>% ggplot + aes(x=daysuntilelection, y=votesneeded) + 
               geom_point(size=3) + 
               geom_smooth(method="lm", fullrange=TRUE, se=FALSE, lty=2, color="dark green") + 
               scale_x_reverse(limits=c(max(votes$daysuntilelection),-3))  +
               scale_y_continuous(limits=c(-3,max(votes$votesneeded))) + 
-              labs(x="Time until election (in days)", y="Votes still needed") +
+              labs(x="Time until election (in days)", y="Votes still needed", caption=modelcomment) +
               geom_hline(yintercept=0, lty=1, color="red")  +
               geom_vline(xintercept=0, lty=1, color="red")  +
+              #annotate("text", x = 20, y = 30, label = modelcomment) + 
               theme_light()
               
 ggsave("graphs/vote-expectation-2021.pdf")
