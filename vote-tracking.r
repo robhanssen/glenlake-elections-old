@@ -61,7 +61,8 @@ ggsave("graphs/vote-tracking-2021.pdf")
 model <- lm(votes$votesreceived ~ votes$daysuntilelection)
 slope = round(abs(coefficients(model)[2]),1)
 intercept = round(coefficients(model)[1],0)
-modelcomment = paste0("Rate: ", slope, " votes/day\nExpected target: ",intercept, " votes")
+quorumdate = (120-intercept)/slope + MEETINGDATE
+modelcomment = paste0("Rate: ", slope, " votes/day\nExpected target: ",intercept, " votes\nPredicted date to pass quorum: ", format(quorumdate, format="%b %d"))
 
 votes %>% ggplot + aes(x=daysuntilelection, y=votesneeded) + 
               geom_point(size=3) + 
