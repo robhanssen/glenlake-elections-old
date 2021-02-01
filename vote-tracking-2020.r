@@ -61,7 +61,7 @@ ggsave("graphs/vote-tracking-2020.pdf")
 model <- lm(votes$votesreceived ~ votes$daysuntilelection)
 slope = abs(coefficients(model)[2])
 intercept = coefficients(model)[1]
-quorumdate = (120-intercept)/slope + MEETINGDATE
+quorumdate = (QUORUM-intercept)/slope + MEETINGDATE
 
 modelcomment = paste0("Rate: ", 
                      round(slope, 1), 
