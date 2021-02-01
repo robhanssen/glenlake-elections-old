@@ -6,18 +6,21 @@ options(bitmapType='cairo')
 
 #define constants
 MEETINGDATE = as.Date("2020-02-08", format="%Y-%m-%d")
-QUORUM = 120
+NUMBEROFHOMES = 482
+QUORUM = NUMBEROFHOMES %/% 4  # 25% quorum requirement
 YMAX_DEFAULT = 160
 SCALING = YMAX_DEFAULT / QUORUM
-YLABELS = seq(0,500,30)
-XLIMITS = c(as.Date("2020-01-15"),as.Date("2020-02-13"))
+YLABELS = seq(0,NUMBEROFHOMES,30)
+XLIMITS = c(MEETINGDATE - months(1),MEETINGDATE + days(3))
 PERCENTBREAKS = seq(0,4*QUORUM,25)
 YEAR = 2020
 
 # read data file
 votes <- read_csv("sources/vote-tracking-2020.csv") %>% 
                     mutate(date = as.Date(date, format="%Y-%m-%d"),
-                           pastquorum = ifelse(votesreceived < QUORUM, FALSE, TRUE)
+                           pastquorum = ifelse(votesreceived < QUORUM, FALSE, TRUE),
+                           daysuntilelection = MEETINGDATE - date,
+                           votesneeded = QUORUM - votesreceived
                             )
 
 # caption generator
@@ -47,11 +50,37 @@ votes %>% ggplot + aes(x=date, y=votesreceived, label=votesreceived) +
             labs(x="Date", y="Votes received", caption=capt)  +
             geom_hline(yintercept = QUORUM, lty=2, color="red") + 
             geom_vline(xintercept = MEETINGDATE, lty = 2, color = "red") + 
-            geom_label_repel(aes(date,votesreceived, label=votesreceived, fill=pastquorum), color="white") +             
-            annotate("text",x = as.Date("2020-01-13", format="%Y-%m-%d"), y = 125, label = paste0("Quorum: ", QUORUM)) + 
-            annotate("text",x = as.Date("2020-02-07", format="%Y-%m-%d"), y = 60, label = "Annual Meeting", angle = 90) + 
-            theme_light() + 
-            theme(legend.position = "none")
+            geom_label_repel(aes(date, votesreceived, label = votesreceived, fill = pastquorum), color="white") +             
+            annotate("text", x = MEETINGDATE - days(28), y = QUORUM*1.05, label = paste0("Quorum: ", QUORUM)) + 
+            annotate("text", x = MEETINGDATE - days(1), y = QUORUM %/% 2, label = "Annual Meeting", angle = 90) + 
+            theme_light() + theme(legend.position = "none")
 
 ggsave("graphs/vote-tracking-2020.png")
 ggsave("graphs/vote-tracking-2020.pdf")
+
+model <- lm(votes$votesreceived ~ votes$daysuntilelection)
+slope = abs(coefficients(model)[2])
+intercept = coefficients(model)[1]
+quorumdate = (120-intercept)/slope + MEETINGDATE
+
+modelcomment = paste0("Rate: ", 
+                     round(slope, 1), 
+                     " votes/day\nExpected target: ",
+                     round(intercept,0), 
+                     " votes\nPredicted date to pass quorum: ", 
+                     format(quorumdate, format="%b %d")
+                     )
+
+votes %>% ggplot + aes(x=daysuntilelection, y=votesneeded, label=votesneeded) + 
+              geom_point(size=3) + 
+              geom_smooth(method="lm", fullrange=TRUE, se=FALSE, lty=2, color="dark green") + 
+              geom_label_repel(aes(daysuntilelection, votesneeded, label = votesneeded)) +                           
+              scale_x_reverse(limits=c(max(votes$daysuntilelection),-3))  +
+              scale_y_continuous(limits=c(-3,max(votes$votesneeded))) + 
+              labs(x="Time until election (in days)", y="Votes still needed", caption=modelcomment) +
+              geom_hline(yintercept=0, lty=1, color="red")  +
+              geom_vline(xintercept=0, lty=1, color="red")  +
+              #annotate("text", x = 20, y = 30, label = modelcomment) + 
+              theme_light()
+              
+ggsave("graphs/vote-expectation-2020.pdf")
