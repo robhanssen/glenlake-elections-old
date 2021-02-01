@@ -59,14 +59,22 @@ ggsave("graphs/vote-tracking-2021.png")
 ggsave("graphs/vote-tracking-2021.pdf")
 
 model <- lm(votes$votesreceived ~ votes$daysuntilelection)
-slope = round(abs(coefficients(model)[2]),1)
-intercept = round(coefficients(model)[1],0)
+slope = abs(coefficients(model)[2])
+intercept = coefficients(model)[1]
 quorumdate = (120-intercept)/slope + MEETINGDATE
-modelcomment = paste0("Rate: ", slope, " votes/day\nExpected target: ",intercept, " votes\nPredicted date to pass quorum: ", format(quorumdate, format="%b %d"))
 
-votes %>% ggplot + aes(x=daysuntilelection, y=votesneeded) + 
+modelcomment = paste0("Rate: ", 
+                     round(slope, 1), 
+                     " votes/day\nExpected target: ",
+                     round(intercept,0), 
+                     " votes\nPredicted date to pass quorum: ", 
+                     format(quorumdate, format="%b %d")
+                     )
+
+votes %>% ggplot + aes(x=daysuntilelection, y=votesneeded, label=votesneeded) + 
               geom_point(size=3) + 
               geom_smooth(method="lm", fullrange=TRUE, se=FALSE, lty=2, color="dark green") + 
+              geom_label_repel(aes(daysuntilelection, votesneeded, label = votesneeded)) +                           
               scale_x_reverse(limits=c(max(votes$daysuntilelection),-3))  +
               scale_y_continuous(limits=c(-3,max(votes$votesneeded))) + 
               labs(x="Time until election (in days)", y="Votes still needed", caption=modelcomment) +
