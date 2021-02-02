@@ -84,7 +84,8 @@ for(y in yearrange)
 
        fname = paste0("graphs/vote-tracking-", y, ".png")
        ggsave(fname)
-       #ggsave("graphs/vote-tracking-2021.pdf")
+       fname = paste0("graphs/vote-tracking-", y, ".pdf")
+       ggsave(fname)
 
        model <- lm(votes$votesreceived ~ votes$daysuntilelection)
        slope = abs(coefficients(model)[2])
