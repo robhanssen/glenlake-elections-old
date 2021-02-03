@@ -37,7 +37,6 @@ yearrange = unique(votes$year)
 
 for(y in yearrange)
 {
-#       y=2021
        voting <- votes %>% filter(year == y) 
 
        QUORUM = unique(voting$quorum)
@@ -87,7 +86,7 @@ for(y in yearrange)
        fname = paste0("graphs/vote-tracking-", y, ".pdf")
        ggsave(fname)
 
-       model <- lm(votes$votesreceived ~ votes$daysuntilelection)
+       model <- lm(voting$votesreceived ~ voting$daysuntilelection)
        slope = abs(coefficients(model)[2])
        intercept = coefficients(model)[1]
        quorumdate = (QUORUM-intercept)/slope + MEETINGDATE
@@ -105,13 +104,15 @@ for(y in yearrange)
               geom_smooth(method="lm", fullrange=TRUE, se=FALSE, lty=2, color="dark green") + 
               geom_label_repel(aes(daysuntilelection, votesneeded, label = votesneeded)) +                           
               scale_x_reverse(limits=c(max(votes$daysuntilelection),-3))  +
-              scale_y_continuous(limits=c(-3,max(votes$votesneeded))) + 
+              scale_y_continuous(limits=c(min(votes$votesneeded),max(votes$votesneeded))) + 
               labs(x="Time until election (in days)", y="Votes still needed", caption=modelcomment) +
               geom_hline(yintercept=0, lty=1, color="red")  +
               geom_vline(xintercept=0, lty=1, color="red")  +
               #annotate("text", x = 20, y = 30, label = modelcomment) + 
               theme_light()
 
-       #ggsave("graphs/vote-expectation-2021.pdf")
+       fname = paste0("graphs/vote-expectation-", y, ".pdf")
+       ggsave(fname)
+
 }              
 
