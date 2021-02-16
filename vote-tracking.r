@@ -5,34 +5,24 @@ library(ggrepel)
 options(bitmapType='cairo')
 
 #define constants
-MEETINGDATE = as.Date("2021-02-06", format="%Y-%m-%d")
-NUMBEROFHOMES = 482
-QUORUM = NUMBEROFHOMES %/% 4  # 25% quorum requirement
 YMAX_DEFAULT = 160
-SCALING = YMAX_DEFAULT / QUORUM
-YLABELS = seq(0,NUMBEROFHOMES,30)
-XLIMITS = c(MEETINGDATE - months(1),MEETINGDATE + days(3))
-PERCENTBREAKS = seq(0,4*QUORUM,25)
-YEAR = 2021
 
+#read neighborhood defaults
 config <- read_csv("config/config.csv") %>% 
               mutate(year=factor(year), 
                      quorum = numberhomes %/% 4)
 
-
 # read data file
 votes <-	
-    list.files(path="sources/", pattern = "*.csv") %>% 	
-    map_df(~read_csv(paste0("sources/",.))) %>%	
+    list.files(path="sources/", pattern = "*.csv", full.names=TRUE) %>% 	
+    map_df(~read_csv(.)) %>%	
                     mutate(date = as.Date(date, format="%Y-%m-%d"),
                            year = factor(year(date))) %>%
                      inner_join(config) %>%
                      mutate(votesneeded = quorum - votesreceived,
                             daysuntilelection = meetingdate - date,
-                            pastquorum = ifelse( votesreceived >= quorum, TRUE, FALSE)
-                            
+                            pastquorum = ifelse( votesreceived >= quorum, TRUE, FALSE)                           
                             )
-
 yearrange = unique(votes$year)
 
 for(y in yearrange)
@@ -108,11 +98,9 @@ for(y in yearrange)
               labs(x="Time until election (in days)", y="Votes still needed", caption=modelcomment) +
               geom_hline(yintercept=0, lty=1, color="red")  +
               geom_vline(xintercept=0, lty=1, color="red")  +
-              #annotate("text", x = 20, y = 30, label = modelcomment) + 
               theme_light()
 
        fname = paste0("graphs/vote-expectation-", y, ".pdf")
        ggsave(fname)
-
 }              
 
