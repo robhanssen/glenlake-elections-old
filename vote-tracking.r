@@ -2,6 +2,7 @@
 library(tidyverse)
 library(lubridate)
 library(ggrepel)
+library(broom)
 options(bitmapType='cairo')
 
 #define constants
@@ -11,6 +12,12 @@ YMAX_DEFAULT = 160
 config <- read_csv("config/config.csv") %>% 
               mutate(year=factor(year), 
                      quorum = numberhomes %/% 4)
+
+find_value <- function(x, y, target = 120) {
+    aa <- approx(y, x, xout = target)$y
+    as.Date(aa, origin = "1970-01-01")  ## convert back to a date (ugh)
+}
+
 
 # read data file
 votes <-	
@@ -100,7 +107,41 @@ for(y in yearrange)
               geom_vline(xintercept=0, lty=1, color="red")  +
               theme_light()
 
-       fname = paste0("graphs/vote-expectation-", y, ".pdf")
+       fname <- paste0("graphs/vote-expectation-", y, ".pdf")
        ggsave(fname)
+
+       predictrange <- tibble(date  = seq.Date(from = min(voting$date),
+                                                 to = MEETINGDATE + days(7),
+                                                 by = "1 day"))
+
+
+predictedvotes <- voting %>%
+              lm(votesreceived ~ date, data=.) %>%
+              augment(newdata = predictrange)
+
+targetdate <- find_value(predictedvotes$date, predictedvotes$.fitted, target = 120)
+
+       voting %>% ggplot + aes(x=date, y=votesreceived) + 
+            #geom_smooth(method="lm", lty=2, color="gray") + 
+            geom_point() + 
+       #      geom_line(lty=2, color="black") +
+            scale_x_date(date_breaks="1 week", date_labels = "%b %d", limit=XLIMITS) + 
+            scale_y_continuous(limit = YLIMITS, breaks = YLABELS, 
+                               sec.axis = sec_axis(~ ./QUORUM*100, breaks=PERCENTBREAKS, name="Quorum (%)")
+                                ) + 
+            labs(x="Date", y="Votes received", caption=capt)  +
+            geom_hline(yintercept = QUORUM, lty=2, color="red") +
+            geom_vline(xintercept = MEETINGDATE, lty = 2, color = "red") +
+            geom_vline(xintercept = targetdate, color = "purple", lty = 3) +
+       #      geom_label_repel(aes(date, votesreceived, label = votesreceived, fill = pastquorum), color="white") +             
+            annotate("text", x = MEETINGDATE - days(28), y = QUORUM*1.05, label = paste0("Quorum: ", QUORUM)) + 
+            annotate("text", x = MEETINGDATE - days(1), y = QUORUM %/% 2, label = "Annual Meeting", angle = 90) + 
+            theme_light() + theme(legend.position = "none") +
+            geom_line(data = predictedvotes, aes(y = .fitted, label=NULL))
+
+       fname <- paste0("graphs/vote-expectation2-", y, ".pdf")
+       ggsave(fname)
+
+
 }              
 
