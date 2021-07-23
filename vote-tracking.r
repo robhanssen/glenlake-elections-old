@@ -119,6 +119,7 @@ predictedvotes <- voting %>%
               lm(votesreceived ~ date, data=.) %>%
               augment(newdata = predictrange)
 
+expectedvotes <- predictedvotes %>% filter(date == MEETINGDATE) %>% pull(.fitted) %>% floor(.)
 targetdate <- find_value(predictedvotes$date, predictedvotes$.fitted, target = 120)
 
        voting %>% ggplot + aes(x=date, y=votesreceived) + 
@@ -135,13 +136,12 @@ targetdate <- find_value(predictedvotes$date, predictedvotes$.fitted, target = 1
             geom_vline(xintercept = targetdate, color = "purple", lty = 3) +
        #      geom_label_repel(aes(date, votesreceived, label = votesreceived, fill = pastquorum), color="white") +             
             annotate("text", x = MEETINGDATE - days(28), y = QUORUM*1.05, label = paste0("Quorum: ", QUORUM)) + 
+            annotate("text", x = MEETINGDATE - days(28), y = QUORUM*0.90, label = paste0("Quorum date:\n", format(targetdate, format="%b %d, %Y"))) +             
+            annotate("text", x = MEETINGDATE - days(28), y = QUORUM*0.75, label = paste0("Expected votes:\n", expectedvotes)) +             
             annotate("text", x = MEETINGDATE - days(1), y = QUORUM %/% 2, label = "Annual Meeting", angle = 90) + 
             theme_light() + theme(legend.position = "none") +
-            geom_line(data = predictedvotes, aes(y = .fitted, label=NULL))
+            geom_line(data = predictedvotes, aes(y = .fitted, label=NULL), color = "gray50", lty = 1)
 
        fname <- paste0("graphs/vote-expectation2-", y, ".pdf")
        ggsave(fname)
-
-
-}              
-
+}
