@@ -107,3 +107,36 @@ votes %>%
                     fullrange = TRUE)
 
 ggsave("trends/quorum-forecast.pdf", width = 11, height = 8)
+
+
+year_range <- 2018:2021
+vpd_range <- c()
+
+vpd <- function(tbl, y) {
+        est <- full_data_set %>%
+            filter(year == y) %>%
+            lm(data = ., votesneeded ~ daysuntilelection) %>%
+            tidy() %>%
+            pull(estimate)
+        est[2]
+}
+
+
+
+for (y in year_range) {
+    vpd_range <- c(vpd_range, vpd(full_data_set, y))
+}
+
+votes_per_day_by_year <- tibble(year = year_range,
+                        averagevotesperday = vpd_range)
+
+votes_per_day_by_year %>%
+    ggplot +
+        aes(x = year, y = averagevotesperday) +
+        geom_col(alpha = 0.5, fill = "darkgreen") +
+        labs(x = "Year",
+             y = "Average votes per day",
+             title = "Incoming votes per day over the last election years",
+             subtitle = "Vote intake has been dropping every year")
+
+ggsave("trends/intake-votes-per-day.png")
