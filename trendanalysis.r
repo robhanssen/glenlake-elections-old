@@ -107,28 +107,23 @@ votes %>%
                     fullrange = TRUE)
 
 ggsave("trends/quorum-forecast.pdf", width = 11, height = 8)
+ggsave("trends/quorum-forecast.png", width = 7, height = 6)
 
 
-year_range <- 2018:2021
-vpd_range <- c()
+votes_per_day_by_year <- votes %>%
+    dplyr::group_by(year) %>%
+    dplyr::summarize(
+        averagevotesperday = coef(lm(votesneeded ~ daysuntilelection))[2]
+    )
 
-vpd <- function(tbl, y) {
-        est <- tbl %>%
-            filter(year == y) %>%
-            lm(data = ., votesneeded ~ daysuntilelection) %>%
-            tidy() %>%
-            pull(estimate)
-        est[2]
-}
-
-
-
-for (y in year_range) {
-    vpd_range <- c(vpd_range, vpd(full_data_set, y))
-}
-
-votes_per_day_by_year <- tibble(year = year_range,
-                        averagevotesperday = vpd_range)
+fit_line <- lm(data = votes_per_day_by_year,
+               averagevotesperday ~ as.numeric(year)
+               )  %>%
+            augment() %>%
+            rename(year = "as.numeric(year)") %>%
+            mutate(year = year + min_year - 1,
+                   year = factor(year)
+                   )
 
 votes_per_day_by_year %>%
     ggplot +
@@ -137,6 +132,10 @@ votes_per_day_by_year %>%
         labs(x = "Year",
              y = "Average votes per day",
              title = "Incoming votes per day over the last election years",
-             subtitle = "Vote intake has been dropping every year")
+             subtitle = "Vote intake has been dropping every year") +
+        geom_line(data = fit_line,
+                  aes(y = .fitted, group = TRUE),
+                  color = "red",
+                  lty = 2)
 
-ggsave("trends/intake-votes-per-day.png")
+ggsave("trends/intake-votes-per-day.png", width = 5, height = 5)
