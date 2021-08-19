@@ -113,7 +113,7 @@ year_range <- 2018:2021
 vpd_range <- c()
 
 vpd <- function(tbl, y) {
-        est <- full_data_set %>%
+        est <- tbl %>%
             filter(year == y) %>%
             lm(data = ., votesneeded ~ daysuntilelection) %>%
             tidy() %>%
