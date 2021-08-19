@@ -116,35 +116,37 @@ votes_per_day_by_year <- votes %>%
         averagevotesperday = coef(lm(votesneeded ~ daysuntilelection))[2]
     )
 
+days28 <- 120 / 28
+forecast_years <- 2
+
 fit_line <- lm(data = votes_per_day_by_year,
                averagevotesperday ~ as.numeric(paste(year))
                )  %>%
             augment(newdata = tibble(year = seq(min_year,
-                                                max_year + 2, 1
+                                                max_year + forecast_years, 1
                                                 )
                                     )
                     ) %>%
-            mutate(year = factor(year))
+            mutate(year = factor(year), 
+                   required_length = ceiling(120 / .fitted))
 
 fit_col <- lm(data = votes_per_day_by_year,
                averagevotesperday ~ as.numeric(paste(year))
                )  %>%
             augment(newdata = tibble(year = seq(max_year + 1,
-                                                max_year + 2, 1
+                                                max_year + forecast_years, 1
                                                 )
                                     )
                     ) %>%
             mutate(year = factor(year))
-
-days28 <- 120 / 28
-
 
 votes_per_day_by_year %>%
     ggplot +
         aes(x = year, y = averagevotesperday) +
         geom_point(color = "darkgreen", alpha = 0.5, size = 3) +
         geom_col(alpha = 0.5, fill = "darkgreen") +
-        expand_limits(y = 0) +
+        expand_limits(y = -1.0) +
+        scale_y_continuous(breaks = 2 * -10:20) +
         labs(x = "Year",
              y = "Average votes per day",
              title = "Incoming votes per day over the last election years",
@@ -174,6 +176,13 @@ votes_per_day_by_year %>%
                  hjust = .6,
                  y = days28 * 1.17,
                  color = "darkgreen",
-                 label = "Minimum rate\nfor 28 day\nelection season")
+                 label = "Minimum rate\nfor 28 day\nelection season") +
+        geom_text(data = fit_line, aes(year, -0.5, label = required_length)) +
+        annotate("text",
+                 x = first(fit_line$year),
+                 hjust = 0,
+                 y = -1,
+                 color = "black",
+                 label = "Minimum required length of election season")
 
 ggsave("trends/intake-votes-per-day.png", width = 6, height = 6)
