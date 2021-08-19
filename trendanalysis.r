@@ -16,6 +16,8 @@ find_value <- function(x, y, target = 0) {
     approx(y, x, xout = target)$y
 }
 
+# select all years to not be included in the baseline range
+analysis_years <- c(2022)
 
 # read data file
 votes <-
@@ -31,7 +33,10 @@ votes <-
                                                 FALSE)
                             )
 
-votes <- votes %>% filter(!year %in% c(2022))
+full_data_set <- votes
+
+votes <- votes %>% filter(!year %in% analysis_years)
+votes_this_year <- full_data_set %>% filter(year %in% analysis_years)
 
 votesmodel <- with(votes,
                 lm(votesneeded ~ daysuntilelection))
@@ -75,7 +80,7 @@ votes %>%
         scale_x_reverse(breaks = seq(0, 100, 7)) +
         expand_limits(x = 28) +
         geom_line(data = votesdata, aes(y = .fitted, color = NULL), lty = 2) +
-        geom_vline(xintercept =  zero_days, lty = 2, color = "gray50") +
+        geom_vline(xintercept =  zero_days, lty = 3, color = "gray50") +
         geom_hline(yintercept = 0, color = "black") +
         geom_ribbon(aes(y = .fitted,
                         ymin = .lower,
@@ -84,6 +89,7 @@ votes %>%
                     fill = "lightblue",
                     alpha = 0.5,
                     data = votesdata) +
+        annotate("label", x = 26, y = 0, label = "Quorum met") + 
         labs(x = "Days until the Annual Meeting",
              y = "Votes still required to meet quorum",
              title = "Forecasting when the quorum will be met",
@@ -91,6 +97,13 @@ votes %>%
              caption = caption) +
         theme(
                 plot.caption = element_markdown()
-              )
+              ) +
+        geom_point(data = votes_this_year, color = "red") +
+        geom_smooth(data = votes_this_year,
+                    method = "lm",
+                    se = FALSE, 
+                    color = "red",
+                    lty = 2,
+                    fullrange = TRUE)
 
 ggsave("trends/quorum-forecast.pdf", width = 11, height = 8)
