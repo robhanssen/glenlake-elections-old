@@ -89,7 +89,7 @@ votes %>%
                     fill = "lightblue",
                     alpha = 0.5,
                     data = votesdata) +
-        annotate("label", x = 26, y = 0, label = "Quorum met") + 
+        annotate("label", x = 26, y = 0, label = "Quorum met") +
         labs(x = "Days until the Annual Meeting",
              y = "Votes still required to meet quorum",
              title = "Forecasting when the quorum will be met",
@@ -101,7 +101,7 @@ votes %>%
         geom_point(data = votes_this_year, color = "red") +
         geom_smooth(data = votes_this_year,
                     method = "lm",
-                    se = FALSE, 
+                    se = FALSE,
                     color = "red",
                     lty = 2,
                     fullrange = TRUE)
@@ -117,25 +117,63 @@ votes_per_day_by_year <- votes %>%
     )
 
 fit_line <- lm(data = votes_per_day_by_year,
-               averagevotesperday ~ as.numeric(year)
+               averagevotesperday ~ as.numeric(paste(year))
                )  %>%
-            augment() %>%
-            rename(year = "as.numeric(year)") %>%
-            mutate(year = year + min_year - 1,
-                   year = factor(year)
-                   )
+            augment(newdata = tibble(year = seq(min_year,
+                                                max_year + 2, 1
+                                                )
+                                    )
+                    ) %>%
+            mutate(year = factor(year))
+
+fit_col <- lm(data = votes_per_day_by_year,
+               averagevotesperday ~ as.numeric(paste(year))
+               )  %>%
+            augment(newdata = tibble(year = seq(max_year + 1,
+                                                max_year + 2, 1
+                                                )
+                                    )
+                    ) %>%
+            mutate(year = factor(year))
+
+days28 <- 120 / 28
+
 
 votes_per_day_by_year %>%
     ggplot +
         aes(x = year, y = averagevotesperday) +
+        geom_point(color = "darkgreen", alpha = 0.5, size = 3) +
         geom_col(alpha = 0.5, fill = "darkgreen") +
+        expand_limits(y = 0) +
         labs(x = "Year",
              y = "Average votes per day",
              title = "Incoming votes per day over the last election years",
-             subtitle = "Vote intake has been dropping every year") +
+             subtitle = "Vote intake has been dropping every year",
+             caption = "Actual data in green; Predictions in red") +
         geom_line(data = fit_line,
                   aes(y = .fitted, group = TRUE),
                   color = "red",
-                  lty = 2)
+                  lty = "dotdash",
+                  size = 1) +
+        geom_point(data = fit_col,
+                  aes(y = .fitted, group = TRUE),
+                  color = "red",
+                  size = 3) +
+        geom_col(data = fit_col,
+                  aes(y = .fitted, group = TRUE),
+                  fill = "red",
+                  alpha = 0.5,
+                  size = 3) +
+        geom_hline(yintercept = days28,
+                   lty = 1,
+                   alpha = 0.3,
+                   color = "darkgreen",
+                   size = 1) +
+        annotate("label",
+                 x = last(fit_col$year),
+                 hjust = .6,
+                 y = days28 * 1.17,
+                 color = "darkgreen",
+                 label = "Minimum rate\nfor 28 day\nelection season")
 
-ggsave("trends/intake-votes-per-day.png", width = 5, height = 5)
+ggsave("trends/intake-votes-per-day.png", width = 6, height = 6)
