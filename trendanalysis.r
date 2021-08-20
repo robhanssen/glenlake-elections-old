@@ -4,6 +4,7 @@ library(lubridate)
 library(ggrepel)
 library(broom)
 library(ggtext)
+library(patchwork)
 options(bitmapType = "cairo")
 theme_set(theme_light())
 
@@ -73,7 +74,7 @@ caption <- paste0("Based on data from ", min_year, " to ", max_year, "<BR>",
                   )
 
 
-votes %>%
+votesforecast <- votes %>%
     ggplot +
         aes(x = daysuntilelection, y = votesneeded, color = NULL) +
         geom_point() +
@@ -97,7 +98,9 @@ votes %>%
              caption = caption) +
         theme(
                 plot.caption = element_markdown()
-              ) +
+              )
+              
+votesforecast_thisyear <- votesforecast +
         geom_point(data = votes_this_year, color = "red") +
         geom_smooth(data = votes_this_year,
                     method = "lm",
@@ -106,9 +109,17 @@ votes %>%
                     lty = 2,
                     fullrange = TRUE)
 
-ggsave("trends/quorum-forecast.pdf", width = 11, height = 8)
-ggsave("trends/quorum-forecast.png", width = 6, height = 6)
+ggsave("trends/quorum-forecast_thisyear.png",
+       plot = votesforecast_thisyear,
+       width = 11,
+       height = 8)
 
+ggsave("trends/quorum-forecast.png",
+       plot = votesforecast,
+       width = 6,
+       height = 6)
+
+#########################################
 
 votes_per_day_by_year <- votes %>%
     dplyr::group_by(year) %>%
@@ -140,7 +151,7 @@ fit_col <- lm(data = votes_per_day_by_year,
                     ) %>%
             mutate(year = factor(year))
 
-votes_per_day_by_year %>%
+votingrate <- votes_per_day_by_year %>%
     ggplot +
         aes(x = year, y = averagevotesperday) +
         geom_point(color = "darkgreen", alpha = 0.5, size = 3) +
@@ -194,4 +205,10 @@ votes_per_day_by_year %>%
                  label.size = NA,
                  label = "Minimum required days of election season")
 
-ggsave("trends/intake-votes-per-day.png", width = 6, height = 6)
+ggsave("trends/intake-votes-per-day.png",
+       plot = votingrate,
+       width = 6,
+       height = 6)
+
+(votesforecast / votingrate)
+ggsave("trends/voteforecasts_combined.pdf", width = 8, height = 11)
