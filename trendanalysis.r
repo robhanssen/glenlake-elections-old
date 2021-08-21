@@ -129,6 +129,7 @@ votes_per_day_by_year <- votes %>%
 
 days28 <- 120 / 28
 forecast_years <- 2
+config$year <- as.numeric(paste(config$year))
 
 fit_line <- lm(data = votes_per_day_by_year,
                averagevotesperday ~ as.numeric(paste(year))
@@ -138,8 +139,10 @@ fit_line <- lm(data = votes_per_day_by_year,
                                                 )
                                     )
                     ) %>%
+            left_join(config) %>%
+            mutate(quorum = ifelse(!is.na(quorum), quorum, 120)) %>%
             mutate(year = factor(year),
-                   required_length = ceiling(120 / .fitted))
+                   required_length = ceiling(quorum / .fitted))
 
 fit_col <- lm(data = votes_per_day_by_year,
                averagevotesperday ~ as.numeric(paste(year))
@@ -162,7 +165,7 @@ votingrate <- votes_per_day_by_year %>%
              y = "Average votes per day",
              title = "Incoming votes per day over the last election years",
              subtitle = "Vote intake has been dropping every year",
-             caption = "Actual data in green; Predictions in red") +
+             caption = "Actual data in green;\nModels and predictions in red") +
         geom_line(data = fit_line,
                   aes(y = .fitted, group = TRUE),
                   color = "red",
@@ -187,7 +190,7 @@ votingrate <- votes_per_day_by_year %>%
                  hjust = .6,
                  y = days28 * 1.17,
                  color = "darkgreen",
-                 label = "Minimum rate\nfor 28 day\nelection season") +
+                 label = "Minimum rate\nfor 28-day\nelection season") +
         geom_label(data = fit_line,
                   aes(year, 0.5, label = required_length),
                   color = "white",
