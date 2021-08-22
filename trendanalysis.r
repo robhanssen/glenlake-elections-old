@@ -127,7 +127,7 @@ votes_per_day_by_year <- votes %>%
         averagevotesperday = coef(lm(votesneeded ~ daysuntilelection))[2]
     )
 
-days28 <- 120 / 28
+days60 <- 120 / 60
 forecast_years <- 2
 config$year <- as.numeric(paste(config$year))
 
@@ -180,17 +180,19 @@ votingrate <- votes_per_day_by_year %>%
                   fill = "red",
                   alpha = 0.5,
                   size = 3) +
-        geom_hline(yintercept = days28,
+        geom_hline(yintercept = days60,
                    lty = 1,
                    alpha = 0.3,
-                   color = "darkgreen",
+                   color = "red",
                    size = 1) +
         annotate("label",
-                 x = last(fit_col$year),
-                 hjust = .6,
-                 y = days28 * 1.17,
-                 color = "darkgreen",
-                 label = "Minimum rate\nfor 28-day\nelection season") +
+                 x = first(fit_line$year),
+                 hjust = 0.05,
+                 y = days60, #days28 * 1.17,
+                 color = "white",
+                 label.size = NA,
+                 fill = "red",
+                 label = "Minimum rate mandated by the CC&R (60 days maximum notice)") +
         geom_label(data = fit_line,
                   aes(year, 0.5, label = required_length),
                   color = "white",
