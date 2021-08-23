@@ -67,7 +67,7 @@ subtitle <- paste0("Quorum expected between ",
 
 min_year <- min(as.numeric(paste(votes$year)))
 max_year <- max(as.numeric(paste(votes$year)))
-caption <- paste0("Based on data from ", min_year, " to ", max_year, "<BR>",
+caption <- paste0("Based on data from ", min_year, " to ", max_year, ", ",
                   "R<sup>2</sup> = ", rsq, "<BR>",
                   "Average votes per day: ", slope, "<BR>",
                   "Minumum days of voting needed: ", ceiling(120 / slope)
@@ -217,3 +217,4 @@ ggsave("trends/intake-votes-per-day.png",
 
 (votesforecast / votingrate)
 ggsave("trends/voteforecasts_combined.pdf", width = 8, height = 11)
+ggsave("trends/voteforecasts_combined.png", width = 6, height = 10)
