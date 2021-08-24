@@ -218,3 +218,104 @@ ggsave("trends/intake-votes-per-day.png",
 (votesforecast / votingrate)
 ggsave("trends/voteforecasts_combined.pdf", width = 8, height = 11)
 ggsave("trends/voteforecasts_combined.png", width = 6, height = 10)
+
+#######################################################
+
+votes_per_day_by_year <- votes %>%
+    dplyr::group_by(year) %>%
+    dplyr::summarize(
+        averagevotesperday = coef(lm(votesneeded ~ daysuntilelection))[2],
+        r.sq = summary(lm(votesneeded ~ daysuntilelection))$r.squared,
+        df = n() - 2) %>%
+    mutate(
+        t_alpha = qt(0.10 / 2, df, lower.tail = FALSE),
+        sterr = averagevotesperday * sqrt((1 / r.sq - 1) / df),
+        err.bar = ifelse(df < 4, 0, t_alpha * sterr),
+        slope_max = averagevotesperday + err.bar,
+        slope_min = averagevotesperday - err.bar
+    ) %>%
+    select(-t_alpha, sterr, -r.sq, -df)
+
+days60 <- 120 / 60
+forecast_years <- 2
+config$year <- as.numeric(paste(config$year))
+
+fit_line <- lm(data = votes_per_day_by_year,
+               averagevotesperday ~ as.numeric(paste(year))
+               )  %>%
+            augment(newdata = tibble(year = seq(min_year,
+                                                max_year + forecast_years, 1
+                                                )
+                                    )
+                    ) %>%
+            left_join(config) %>%
+            mutate(quorum = ifelse(!is.na(quorum), quorum, 120)) %>%
+            mutate(year = factor(year),
+                   required_length = ceiling(quorum / .fitted))
+
+fit_col <- lm(data = votes_per_day_by_year,
+               averagevotesperday ~ as.numeric(paste(year))
+               )  %>%
+            augment(newdata = tibble(year = seq(max_year + 1,
+                                                max_year + forecast_years, 1
+                                                )
+                                    )
+                    ) %>%
+            mutate(year = factor(year))
+
+votingrate <- votes_per_day_by_year %>%
+    ggplot +
+        aes(x = year, y = averagevotesperday) +
+        geom_point(color = "darkgreen", alpha = 0.5, size = 3) +
+        geom_col(alpha = 0.5, fill = "darkgreen") +
+        expand_limits(y = 0.0) +
+        scale_y_continuous(breaks = 2 * -10:20) +
+        labs(x = "Year",
+             y = "Average votes per day",
+             title = "Incoming votes per day over the last election years",
+             subtitle = "Vote intake has been dropping every year",
+             caption = "Actual data in green;\nModels and predictions in red") +
+        geom_errorbar(aes(ymax = slope_max, ymin = slope_min), width=.2) +
+        geom_line(data = fit_line,
+                  aes(y = .fitted, group = TRUE),
+                  color = "red",
+                  lty = "dotdash",
+                  size = 1) +
+        geom_point(data = fit_col,
+                  aes(y = .fitted, group = TRUE),
+                  color = "red",
+                  size = 3) +
+        geom_col(data = fit_col,
+                  aes(y = .fitted, group = TRUE),
+                  fill = "red",
+                  alpha = 0.5,
+                  size = 3) +
+        geom_hline(yintercept = days60,
+                   lty = 1,
+                   alpha = 0.3,
+                   color = "red",
+                   size = 1) +
+        annotate("label",
+                 x = first(fit_line$year),
+                 hjust = 0.05,
+                 y = days60, #days28 * 1.17,
+                 color = "white",
+                 label.size = NA,
+                 fill = "red",
+                 label = "Minimum rate mandated by the CC&R (60 days maximum notice)") +
+        geom_label(data = fit_line,
+                  aes(year, 0.5, label = required_length),
+                  color = "white",
+                  fill = "darkgreen",
+                  alpha = .6,
+                  label.size = NA,
+                  ) +
+        annotate("label",
+                 x = first(fit_line$year),
+                 hjust = .1,
+                 y = 1,
+                 color = "white",
+                 fill = "darkgreen",
+                 alpha = .6,
+                 label.size = NA,
+                 label = "Minimum required days of election season")
