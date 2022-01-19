@@ -1,0 +1,4 @@
+*.pdf
+*.png
+*.jpg
+!graphs/vote-tracking-2022.png
