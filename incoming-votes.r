@@ -91,4 +91,4 @@ votes %>%
     theme(legend.position = "none", 
           plot.subtitle = element_markdown())
 
-ggsave("graphs/vote-count-comparison.png", width = 6, height = 6)
+ggsave("trends/vote-count-comparison.png", width = 6, height = 6)
