@@ -18,7 +18,7 @@ find_value <- function(x, y, target = 0) {
 }
 
 # select all years to not be included in the baseline range
-analysis_years <- c(2022)
+analysis_years <- c(2023)
 
 # read data file
 votes <-
