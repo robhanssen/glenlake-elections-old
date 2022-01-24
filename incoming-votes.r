@@ -58,7 +58,7 @@ votes %>%
                aes(label = NA),
                color = "red",
                size = 3)  +
-    geom_label_repel(size = 3) +
+    geom_label(size = 2) +
     scale_x_reverse(breaks = seq(0, 49, 7)) +
     scale_y_continuous(breaks = seq(0, 200, 20)) +
     labs(x = "Days until the Annual Meeting",
